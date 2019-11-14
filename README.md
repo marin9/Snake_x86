@@ -1,7 +1,9 @@
 # Snake game
 
 Snake game in 512 Bytes.
-Controls:
+
+**Controls:**
+
 	A - left
 	S - down
 	D - right
