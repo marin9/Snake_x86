@@ -14,3 +14,6 @@ nasm -f bin snake.asm -o snake.bin
 qemu-system-i386 -fda snake.bin
 ```
 
+![Snake screenshot](https://raw.githubusercontent.com/marin9/Snake_x86/master/ss.png)
+
+
