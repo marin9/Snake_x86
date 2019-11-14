@@ -8,7 +8,6 @@ Controls:
 	W - up
 	R - restart
 
-
 **Compile:**
 
 ```c
