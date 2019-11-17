@@ -2,14 +2,14 @@ org 	0x7C00
 bits	16
 
 start:
-	; init stack
+	; init resisters
 	xor ax, ax
 	mov ds, ax
 	mov ss, ax
 	mov sp, 0x7b00
 
 	; set video mod 40x25
-	mov ax, 0
+	xor ax, ax
 	int 0x10
 
 	; disable cursor
@@ -19,11 +19,12 @@ start:
 
 loop:
 	call clear_screen
-	; get input
+	; check keyboard buffer status
 	mov ah, 1
 	int 0x16
-	mov ah, 0
 	je no_key
+	; get key
+	mov ah, 0	
 	int 0x16
 	mov [ort], al
 no_key:
@@ -39,7 +40,8 @@ no_key:
 	mov dx, 0xC000	
 	mov bx, [score]
 	cmp bx, 50
-	jl _d 
+	jl _d
+	; sleep less if score >= 50
 	dec cl
 _d:	int 0x15
 	jmp loop
@@ -48,27 +50,28 @@ _d:	int 0x15
 clear_screen:
 	mov ax, 0x0700	; scroll down window
 	mov bh, 0x20	; black on green
-	xor cx, cx	; specifies top left of screen as (0,0)
+	xor cx, cx		; specifies top left of screen as (0,0)
 	mov dx, 0x1827	; 18h=24 rows, 27h=39 cols
 	int 0x10
 	ret
 
 draw_scores:
-	; set cursor
+	; set cursor (0, 0)
 	mov bh, 0x00
 	xor dx, dx
 	mov ah, 0x02
 	int 0x10
+	; draw black line on top
 	mov ax, 0x0900
-	mov bl, 0x04
+	mov bl, 0x0e
 	mov cx, 40
 	int 0x10
-	; set cursor
+	; set cursor (0, 0)
 	mov bh, 0x00
 	xor dx, dx
 	mov ah, 0x02
 	int 0x10
-	; num to str
+	; score number to string
 _3:	mov ax, [score]
 	mov bx, 10
 	xor cx, cx
@@ -80,7 +83,7 @@ _4:	xor dx, dx
 	jnz _4
 _5:	pop dx
 	add dl, '0'
-	;print digit
+	; print digit
 	push ax
 	push bx
 	mov ah, 0x0e
@@ -94,16 +97,16 @@ _5:	pop dx
 	ret
 
 draw_snake:
-	; draw head
+	; set cursor for head
 	mov bh, 0x00
 	mov dx, [head]
 	mov ah, 0x02
 	int 0x10
+	; draw head
 	mov al, 2
 	mov ah, 0x0e
 	int 0x10
-
-	; draw body
+	; set cursor for body
 	mov si, body
 _1:	mov dx, [si]
 	and dx, dx
@@ -111,6 +114,7 @@ _1:	mov dx, [si]
 	add si, 2
 	mov ah, 0x02
 	int 0x10
+	; draw body
 	mov al, 'O'
 	mov ah, 0x0e
 	int 0x10
@@ -118,12 +122,14 @@ _1:	mov dx, [si]
 _11: ret
 
 draw_food:
+	; set cursor for food
 	mov bh, 0x00
 	mov dx, [food]
 	mov ah, 0x02
 	int 0x10
+	; draw food
 	mov al, 5
-	mov bx, 0x0026
+	mov bx, 0x0024
 	mov cx, 1
 	mov ah, 0x09
 	int 0x10
@@ -147,7 +153,6 @@ _7:	mov di, si
 	jne _8
 	add si, 2
 	add di, 2
-
 	xor bl, bl
 	dec byte [eat]
 	inc word [score]
@@ -228,13 +233,15 @@ game_over:
 	call draw_scores
 	call draw_food
 	call draw_snake
+	; wait for R key
 	xor ah, ah
 	int 0x16
 	cmp al, 'r'
 	jne game_over
 	jmp 0xffff:0x0000
 
-rand: ; get rand 0,bx-1 -> dx
+rand:
+	; get rand dx = (0, bx-1)
 	mov ah, 0
 	int 0x1A
 	mov ax, dx
@@ -256,9 +263,9 @@ gen_food:
 	call rand
 	inc dx
 	mov byte [food+1], dl
+	; test is food on free position
 	call test_food
-	and ax, ax
-	jnz gen_food
+	jc gen_food
 _e:	ret
 
 test_food:
@@ -272,10 +279,10 @@ _c:
 	add si, 2
 	jmp _c
 r1:
-	mov ax, 1
+	stc
 	ret
 r0:
-	xor ax, ax
+	clc
 	ret
 
 
@@ -286,6 +293,7 @@ score:	dw 0
 food:	dw 0x0F0F
 head:	dw 0x0A0A
 body:	dw 0x0A09
+		dw 0x0A08
 		dw 0x0000
 
 times	510-($-$$) db 0
