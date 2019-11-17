@@ -19,7 +19,7 @@ nasm -f bin snake.asm -o snake.bin
 **Run in qemu:**
 
 ```c
-qemu-system-i386 -fda snake.bin
+qemu-system-i386 -hda snake.bin
 ```
 
 ![Snake screenshot](https://raw.githubusercontent.com/marin9/Snake_x86/master/ss.png)

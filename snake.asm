@@ -3,10 +3,13 @@ bits	16
 
 start:
 	; init stack
+	xor ax, ax
+	mov ds, ax
+	mov ss, ax
 	mov sp, 0x7b00
 
 	; set video mod 40x25
-	xor ax, ax
+	mov ax, 0
 	int 0x10
 
 	; disable cursor
@@ -283,7 +286,6 @@ score:	dw 0
 food:	dw 0x0F0F
 head:	dw 0x0A0A
 body:	dw 0x0A09
-		dw 0x0A08
 		dw 0x0000
 
 times	510-($-$$) db 0
